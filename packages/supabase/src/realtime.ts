@@ -17,7 +17,12 @@ export function subscribeToUserData(
   client: TypedSupabaseClient,
   userId: string,
   onChange: (event: RealtimeEvent) => void,
+  accessToken?: string,
 ): () => void {
+  // Realtime evaluates RLS using the socket's JWT — without it, RLS-protected
+  // postgres_changes are silently never delivered.
+  if (accessToken) void client.realtime.setAuth(accessToken);
+
   const tables: RealtimeTable[] = ["transactions", "recurring_expenses", "savings_goals", "profiles"];
   const channel: RealtimeChannel = client.channel(`pocketpilot:${userId}`);
 

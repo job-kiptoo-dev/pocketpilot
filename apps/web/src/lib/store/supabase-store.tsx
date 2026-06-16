@@ -49,8 +49,9 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
 
     (async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) {
         setHydrated(true);
         return;
@@ -59,11 +60,16 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
       await reload();
       setHydrated(true);
 
-      unsubscribe = subscribeToUserData(supabase, user.id, () => {
-        // Debounce bursts of changes into a single reload.
-        clearTimeout(reloadTimer);
-        reloadTimer = setTimeout(reload, 120);
-      });
+      unsubscribe = subscribeToUserData(
+        supabase,
+        user.id,
+        () => {
+          // Debounce bursts of changes into a single reload.
+          clearTimeout(reloadTimer);
+          reloadTimer = setTimeout(reload, 120);
+        },
+        session.access_token,
+      );
       setLive(true);
     })();
 

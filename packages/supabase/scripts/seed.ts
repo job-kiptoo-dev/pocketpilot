@@ -51,11 +51,22 @@ async function main() {
   await admin.from("recurring_expenses").delete().eq("user_id", userId);
   await admin.from("savings_goals").delete().eq("user_id", userId);
 
+  // Drop the fixtures' string ids so Postgres assigns real UUIDs.
   const tx = await admin.from("transactions").insert(data.transactions.map((t) => transactionToInsert(t, userId)));
   if (tx.error) throw tx.error;
-  const rec = await admin.from("recurring_expenses").insert(data.recurring.map((r) => recurringToRow(r, userId)));
+  const rec = await admin.from("recurring_expenses").insert(
+    data.recurring.map((r) => {
+      const { id: _id, ...row } = recurringToRow(r, userId);
+      return row;
+    }),
+  );
   if (rec.error) throw rec.error;
-  const goals = await admin.from("savings_goals").insert(data.goals.map((g) => goalToRow(g, userId)));
+  const goals = await admin.from("savings_goals").insert(
+    data.goals.map((g) => {
+      const { id: _id, ...row } = goalToRow(g, userId);
+      return row;
+    }),
+  );
   if (goals.error) throw goals.error;
 
   console.log(`✓ Seeded ${email} (${userId})`);

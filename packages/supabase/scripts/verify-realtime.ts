@@ -33,6 +33,8 @@ async function main() {
   const { data: auth, error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw error;
   const userId = auth.user!.id;
+  // Realtime evaluates RLS using the socket's auth token.
+  await client.realtime.setAuth(auth.session!.access_token);
 
   const repo = createSupabaseRepository(client, userId);
   const before = await repo.load();

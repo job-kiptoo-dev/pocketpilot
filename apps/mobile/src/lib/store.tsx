@@ -79,10 +79,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     let reloadTimer: ReturnType<typeof setTimeout> | undefined;
 
     void reload();
-    const unsubscribe = subscribeToUserData(supabase, userId, () => {
-      clearTimeout(reloadTimer);
-      reloadTimer = setTimeout(reload, 120);
-    });
+    const unsubscribe = subscribeToUserData(
+      supabase,
+      userId,
+      () => {
+        clearTimeout(reloadTimer);
+        reloadTimer = setTimeout(reload, 120);
+      },
+      session.access_token,
+    );
     setLive(true);
 
     // Auto-ingest incoming M-Pesa SMS (Android dev build only).
