@@ -13,7 +13,9 @@
     "./types": "./src/database.types.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "pnpm dlx tsx scripts/seed.ts",
+    "verify": "pnpm dlx tsx scripts/verify-realtime.ts"
   },
   "dependencies": {
     "@pocketpilot/core": "workspace:*",
