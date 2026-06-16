@@ -1,0 +1,115 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  AppData,
+  RecurringExpense,
+  Repository,
+  SavingsGoal,
+  Transaction,
+  UserProfile,
+} from "@pocketpilot/core";
+import type { Database } from "./database.types";
+import {
+  goalToRow,
+  recurringToRow,
+  rowToGoal,
+  rowToProfile,
+  rowToRecurring,
+  rowToTransaction,
+  transactionToInsert,
+} from "./mappers";
+
+export type TypedSupabaseClient = SupabaseClient<Database>;
+
+const DEFAULT_PROFILE: UserProfile = { name: "there", payday: 1, monthlyIncome: 0 };
+
+/**
+ * Supabase-backed implementation of the core {@link Repository}.
+ * Relies on RLS to scope reads; writes set `user_id` explicitly.
+ */
+export class SupabaseRepository implements Repository {
+  constructor(
+    private readonly client: TypedSupabaseClient,
+    private readonly userId: string,
+  ) {}
+
+  async load(): Promise<AppData> {
+    const [profileRes, txRes, recRes, goalRes] = await Promise.all([
+      this.client.from("profiles").select("*").eq("id", this.userId).maybeSingle(),
+      this.client.from("transactions").select("*").order("occurred_at", { ascending: false }),
+      this.client.from("recurring_expenses").select("*").order("created_at", { ascending: true }),
+      this.client.from("savings_goals").select("*").order("created_at", { ascending: true }),
+    ]);
+
+    return {
+      profile: profileRes.data ? rowToProfile(profileRes.data) : DEFAULT_PROFILE,
+      transactions: (txRes.data ?? []).map(rowToTransaction),
+      recurring: (recRes.data ?? []).map(rowToRecurring),
+      goals: (goalRes.data ?? []).map(rowToGoal),
+    };
+  }
+
+  async addTransaction(tx: Omit<Transaction, "id">): Promise<Transaction> {
+    const insert = transactionToInsert(tx, this.userId);
+
+    // SMS messages carry a unique M-Pesa code -> ignore duplicate ingests.
+    if (insert.code) {
+      const { data, error } = await this.client
+        .from("transactions")
+        .upsert(insert, { onConflict: "user_id,code", ignoreDuplicates: true })
+        .select()
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return rowToTransaction(data);
+      // Duplicate was ignored; return the existing row.
+      const existing = await this.client
+        .from("transactions")
+        .select("*")
+        .eq("code", insert.code)
+        .maybeSingle();
+      if (existing.data) return rowToTransaction(existing.data);
+    }
+
+    const { data, error } = await this.client.from("transactions").insert(insert).select().single();
+    if (error) throw error;
+    return rowToTransaction(data);
+  }
+
+  async deleteTransaction(id: string): Promise<void> {
+    const { error } = await this.client.from("transactions").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async upsertRecurring(expense: RecurringExpense): Promise<void> {
+    const { error } = await this.client.from("recurring_expenses").upsert(recurringToRow(expense, this.userId));
+    if (error) throw error;
+  }
+
+  async deleteRecurring(id: string): Promise<void> {
+    const { error } = await this.client.from("recurring_expenses").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async upsertGoal(goal: SavingsGoal): Promise<void> {
+    const { error } = await this.client.from("savings_goals").upsert(goalToRow(goal, this.userId));
+    if (error) throw error;
+  }
+
+  async deleteGoal(id: string): Promise<void> {
+    const { error } = await this.client.from("savings_goals").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async updateProfile(profile: UserProfile): Promise<void> {
+    const { error } = await this.client.from("profiles").upsert({
+      id: this.userId,
+      name: profile.name,
+      payday: profile.payday,
+      monthly_income: profile.monthlyIncome,
+    });
+    if (error) throw error;
+  }
+}
+
+export function createSupabaseRepository(client: TypedSupabaseClient, userId: string): SupabaseRepository {
+  return new SupabaseRepository(client, userId);
+}
