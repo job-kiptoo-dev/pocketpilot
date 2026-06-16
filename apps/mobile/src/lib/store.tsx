@@ -3,7 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { AppData, Transaction } from "@pocketpilot/core";
 import { currentBalance, genId, parseMpesa } from "@pocketpilot/core";
 import { createSupabaseRepository, subscribeToUserData, type SupabaseRepository } from "@pocketpilot/supabase";
-import { supabase, supabaseConfigured } from "./supabase";
+import { getSupabase, supabaseConfigured } from "./supabase";
 import { startSmsListener } from "./sms";
 
 const EMPTY: AppData = {
@@ -36,6 +36,8 @@ export function useStore(): StoreValue {
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  // Created lazily at render time (never during the Node route-scan).
+  const supabase = useMemo(() => getSupabase(), []);
   const [now] = useState(() => new Date());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   // Load data + realtime + SMS listener whenever the user changes.
   useEffect(() => {
@@ -101,7 +103,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       unsubscribe();
       stopSms();
     };
-  }, [session?.user?.id, reload]);
+  }, [supabase, session?.user?.id, session?.access_token, reload]);
 
   const addTransaction = useCallback((tx: Omit<Transaction, "id">) => {
     setData((prev) => {
@@ -137,7 +139,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase?.auth.signOut();
     setData(EMPTY);
-  }, []);
+  }, [supabase]);
 
   const value = useMemo<StoreValue>(
     () => ({

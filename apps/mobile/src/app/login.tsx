@@ -3,7 +3,7 @@ import { Alert, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "@/lib/store";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { useColors } from "@/lib/theme";
 import { Btn, Card, Field, LoadingScreen, Muted, Title } from "@/components/ui";
 
@@ -21,6 +21,7 @@ export default function Login() {
   if (session) return <Redirect href="/dashboard" />;
 
   async function submit() {
+    const supabase = getSupabase();
     if (!supabase) return;
     setBusy(true);
     try {
