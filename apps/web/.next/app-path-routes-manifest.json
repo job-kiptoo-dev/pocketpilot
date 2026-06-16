@@ -1,9 +1,11 @@
 {
+  "/(app)/assistant/page": "/assistant",
+  "/(app)/page": "/",
+  "/(app)/survival/page": "/survival",
+  "/(app)/transactions/page": "/transactions",
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
-  "/assistant/page": "/assistant",
+  "/auth/confirm/route": "/auth/confirm",
   "/favicon.ico/route": "/favicon.ico",
-  "/page": "/",
-  "/survival/page": "/survival",
-  "/transactions/page": "/transactions"
+  "/login/page": "/login"
 }

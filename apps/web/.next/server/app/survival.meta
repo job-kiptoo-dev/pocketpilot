@@ -2,13 +2,14 @@
   "headers": {
     "x-nextjs-stale-time": "300",
     "x-nextjs-prerender": "1",
-    "x-next-cache-tags": "_N_T_/layout,_N_T_/survival/layout,_N_T_/survival/page,_N_T_/survival"
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(app)/layout,_N_T_/(app)/survival/layout,_N_T_/(app)/survival/page,_N_T_/survival"
   },
   "segmentPaths": [
     "/_tree",
     "/_full",
-    "/survival/__PAGE__",
-    "/survival",
+    "/!KGFwcCk/survival/__PAGE__",
+    "/!KGFwcCk/survival",
+    "/!KGFwcCk",
     "/_index",
     "/_head"
   ]
