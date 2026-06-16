@@ -45,11 +45,36 @@ Open the dashboard, then in another tab/window insert a row for your user (via t
 Supabase Table editor, the mobile app, or a second browser). The balance, forecast
 and **SAFE/WARNING/CRITICAL** status update with no refresh.
 
+## Mobile app (Expo)
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env   # already created locally
+# EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+pnpm --filter @pocketpilot/mobile start        # scan the QR with Expo Go
+```
+
+The mobile app signs in against the same Supabase project, so a transaction added
+on the phone appears on the web dashboard **instantly** (and vice-versa).
+
+### Android SMS auto-detection (optional, later)
+
+Reading incoming SMS is Android-only and needs a custom dev build:
+
+```bash
+pnpm --filter @pocketpilot/mobile add react-native-android-sms-listener
+# add RECEIVE_SMS / READ_SMS permissions, then:
+pnpm --filter @pocketpilot/mobile exec expo run:android
+```
+
+Until then, use the **Add → Paste M-Pesa SMS** flow (works on Expo Go and iOS).
+`src/lib/sms.ts` already wires the listener when the native module is present.
+
 ## Monorepo layout
 
 ```
 apps/web              Next.js dashboard (realtime + auth)
-apps/mobile           Expo app — ingests M-Pesa SMS (coming next)
+apps/mobile           Expo app — live dashboard + SMS ingestion
 packages/core         finance engine, types, M-Pesa parser (shared)
 packages/supabase     schema.sql, typed client, repository, realtime helper
 ```
