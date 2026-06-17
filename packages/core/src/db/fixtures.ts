@@ -110,6 +110,10 @@ export function seedData(now: Date = new Date()): AppData {
       { id: "goal-laptop", name: "Laptop Upgrade", emoji: "💻", target: toCents(85000), saved: toCents(22000), deadline: isoMonthsAhead(now, 8) },
       { id: "goal-phone", name: "New Phone", emoji: "📱", target: toCents(35000), saved: toCents(9000), deadline: isoMonthsAhead(now, 4) },
     ],
+    accounts: [
+      { id: "acct-mpesa", name: "M-Pesa", type: "mpesa", balance: 0 },
+      { id: "acct-savings", name: "Bank Savings", type: "bank", balance: toCents(15000) },
+    ],
   };
 }
 

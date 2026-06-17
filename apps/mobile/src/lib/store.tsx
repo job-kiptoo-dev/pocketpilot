@@ -11,6 +11,7 @@ const EMPTY: AppData = {
   transactions: [],
   recurring: [],
   goals: [],
+  accounts: [],
 };
 
 interface StoreValue {

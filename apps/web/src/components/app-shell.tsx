@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Receipt, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
+import { Landmark, LayoutDashboard, Receipt, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/goals", label: "Goals", icon: Target },
+  { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/survival", label: "Survival", icon: ShieldCheck },
   { href: "/assistant", label: "Assistant", icon: Sparkles },
 ] as const;

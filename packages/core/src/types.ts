@@ -57,6 +57,19 @@ export interface SavingsGoal {
   emoji?: string;
 }
 
+export type AccountType = "mpesa" | "bank" | "savings" | "cash";
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  /**
+   * Stored balance in cents. For the M-Pesa account this is derived from
+   * transactions instead (see `accountBalance`).
+   */
+  balance: number;
+}
+
 export interface UserProfile {
   name: string;
   /** Day of the month payday lands on (1-31). */
@@ -70,4 +83,5 @@ export interface AppData {
   transactions: Transaction[];
   recurring: RecurringExpense[];
   goals: SavingsGoal[];
+  accounts: Account[];
 }

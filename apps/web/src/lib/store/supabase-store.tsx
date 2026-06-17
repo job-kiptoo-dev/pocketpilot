@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
+import type { Account, AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
 import { parseMpesa, type ParsedTransaction } from "@pocketpilot/core";
 import {
   createSupabaseRepository,
@@ -18,6 +18,7 @@ const EMPTY: AppData = {
   transactions: [],
   recurring: [],
   goals: [],
+  accounts: [],
 };
 
 /**
@@ -156,9 +157,25 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
     repoRef.current?.deleteGoal(id).catch(() => void reload());
   }, [reload]);
 
+  const upsertAccount = useCallback((account: Account) => {
+    setData((prev) => {
+      const i = prev.accounts.findIndex((a) => a.id === account.id);
+      const accounts = [...prev.accounts];
+      if (i >= 0) accounts[i] = account;
+      else accounts.push(account);
+      return { ...prev, accounts };
+    });
+    repoRef.current?.upsertAccount(account).catch(() => void reload());
+  }, [reload]);
+
+  const deleteAccount = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, accounts: prev.accounts.filter((a) => a.id !== id) }));
+    repoRef.current?.deleteAccount(id).catch(() => void reload());
+  }, [reload]);
+
   const value = useMemo<StoreValue>(
-    () => ({ data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset: reload }),
-    [data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reload],
+    () => ({ data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, upsertAccount, deleteAccount, reset: reload }),
+    [data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, upsertAccount, deleteAccount, reload],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

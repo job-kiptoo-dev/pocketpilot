@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  Account,
   AppData,
   RecurringExpense,
   Repository,
@@ -9,8 +10,10 @@ import type {
 } from "@pocketpilot/core";
 import type { Database } from "./database.types";
 import {
+  accountToRow,
   goalToRow,
   recurringToRow,
+  rowToAccount,
   rowToGoal,
   rowToProfile,
   rowToRecurring,
@@ -33,11 +36,12 @@ export class SupabaseRepository implements Repository {
   ) {}
 
   async load(): Promise<AppData> {
-    const [profileRes, txRes, recRes, goalRes] = await Promise.all([
+    const [profileRes, txRes, recRes, goalRes, acctRes] = await Promise.all([
       this.client.from("profiles").select("*").eq("id", this.userId).maybeSingle(),
       this.client.from("transactions").select("*").order("occurred_at", { ascending: false }),
       this.client.from("recurring_expenses").select("*").order("created_at", { ascending: true }),
       this.client.from("savings_goals").select("*").order("created_at", { ascending: true }),
+      this.client.from("accounts").select("*").order("created_at", { ascending: true }),
     ]);
 
     return {
@@ -45,7 +49,18 @@ export class SupabaseRepository implements Repository {
       transactions: (txRes.data ?? []).map(rowToTransaction),
       recurring: (recRes.data ?? []).map(rowToRecurring),
       goals: (goalRes.data ?? []).map(rowToGoal),
+      accounts: (acctRes.data ?? []).map(rowToAccount),
     };
+  }
+
+  async upsertAccount(account: Account): Promise<void> {
+    const { error } = await this.client.from("accounts").upsert(accountToRow(account, this.userId));
+    if (error) throw error;
+  }
+
+  async deleteAccount(id: string): Promise<void> {
+    const { error } = await this.client.from("accounts").delete().eq("id", id);
+    if (error) throw error;
   }
 
   async addTransaction(tx: Omit<Transaction, "id">): Promise<Transaction> {

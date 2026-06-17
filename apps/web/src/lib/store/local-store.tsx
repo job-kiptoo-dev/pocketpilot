@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
+import type { Account, AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
 import { parseMpesa, seedData, type ParsedTransaction } from "@pocketpilot/core";
 import { StoreContext, withComputedBalance, type StoreValue } from "./context";
 
@@ -76,11 +76,25 @@ export function LocalStoreProvider({ children }: { children: React.ReactNode }) 
     setData((prev) => ({ ...prev, goals: prev.goals.filter((g) => g.id !== id) }));
   }, []);
 
+  const upsertAccount = useCallback((account: Account) => {
+    setData((prev) => {
+      const i = prev.accounts.findIndex((a) => a.id === account.id);
+      const accounts = [...prev.accounts];
+      if (i >= 0) accounts[i] = account;
+      else accounts.push(account);
+      return { ...prev, accounts };
+    });
+  }, []);
+
+  const deleteAccount = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, accounts: prev.accounts.filter((a) => a.id !== id) }));
+  }, []);
+
   const reset = useCallback(() => setData(seedData(new Date())), []);
 
   const value = useMemo<StoreValue>(
-    () => ({ data, now, hydrated, live: true, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset }),
-    [data, now, hydrated, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset],
+    () => ({ data, now, hydrated, live: true, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, upsertAccount, deleteAccount, reset }),
+    [data, now, hydrated, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, upsertAccount, deleteAccount, reset],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

@@ -24,6 +24,7 @@ function makeData(): AppData {
     goals: [
       { id: "g1", name: "Phone", target: toCents(40000), saved: toCents(10000), deadline: new Date(2026, 9, 16).toISOString() },
     ],
+    accounts: [{ id: "a-mpesa", name: "M-Pesa", type: "mpesa", balance: 0 }],
   };
 }
 

@@ -50,6 +50,11 @@ async function main() {
   await admin.from("transactions").delete().eq("user_id", userId);
   await admin.from("recurring_expenses").delete().eq("user_id", userId);
   await admin.from("savings_goals").delete().eq("user_id", userId);
+  // Keep the auto-created M-Pesa account; reset extra accounts.
+  await admin.from("accounts").delete().eq("user_id", userId).neq("type", "mpesa");
+  await admin.from("accounts").insert([
+    { user_id: userId, name: "Bank Savings", type: "bank", balance: data.accounts.find((a) => a.type !== "mpesa")?.balance ?? 1500000 },
+  ]);
 
   // Drop the fixtures' string ids so Postgres assigns real UUIDs.
   const tx = await admin.from("transactions").insert(data.transactions.map((t) => transactionToInsert(t, userId)));

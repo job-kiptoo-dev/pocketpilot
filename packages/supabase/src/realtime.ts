@@ -1,7 +1,7 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { TypedSupabaseClient } from "./repository";
 
-export type RealtimeTable = "transactions" | "recurring_expenses" | "savings_goals" | "profiles";
+export type RealtimeTable = "transactions" | "recurring_expenses" | "savings_goals" | "profiles" | "accounts";
 
 export interface RealtimeEvent {
   table: RealtimeTable;
@@ -23,7 +23,7 @@ export function subscribeToUserData(
   // postgres_changes are silently never delivered.
   if (accessToken) void client.realtime.setAuth(accessToken);
 
-  const tables: RealtimeTable[] = ["transactions", "recurring_expenses", "savings_goals", "profiles"];
+  const tables: RealtimeTable[] = ["transactions", "recurring_expenses", "savings_goals", "profiles", "accounts"];
   const channel: RealtimeChannel = client.channel(`pocketpilot:${userId}`);
 
   for (const table of tables) {

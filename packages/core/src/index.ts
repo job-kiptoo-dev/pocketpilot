@@ -15,6 +15,7 @@ export * from "./finance/forecast";
 export * from "./finance/survival";
 export * from "./finance/savings";
 export * from "./finance/simulator";
+export * from "./finance/accounts";
 
 export * from "./assistant/local";
 

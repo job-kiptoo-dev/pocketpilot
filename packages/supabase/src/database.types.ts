@@ -38,6 +38,17 @@ export type RecurringRow = {
   created_at: string;
 }
 
+export type AccountType = "mpesa" | "bank" | "savings" | "cash";
+
+export type AccountRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: AccountType;
+  balance: number;
+  created_at: string;
+};
+
 export type GoalRow = {
   id: string;
   user_id: string;
@@ -74,6 +85,11 @@ export interface Database {
         GoalRow,
         Omit<GoalRow, "id" | "created_at"> & { id?: string },
         Partial<GoalRow>
+      >;
+      accounts: Table<
+        AccountRow,
+        Omit<AccountRow, "id" | "created_at"> & { id?: string },
+        Partial<AccountRow>
       >;
     };
     // Empty mapped types (no string index signature) — a `Record<string, never>`

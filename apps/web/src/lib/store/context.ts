@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
+import type { Account, AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
 import { currentBalance, genId } from "@pocketpilot/core";
 
 export interface StoreValue {
@@ -16,6 +16,8 @@ export interface StoreValue {
   upsertGoal: (goal: SavingsGoal) => void;
   contributeToGoal: (id: string, amountCents: number) => void;
   deleteGoal: (id: string) => void;
+  upsertAccount: (account: Account) => void;
+  deleteAccount: (id: string) => void;
   reset: () => void;
 }
 

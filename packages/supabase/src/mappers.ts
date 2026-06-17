@@ -1,5 +1,7 @@
 // Map between database rows and the @pocketpilot/core domain model.
 import type {
+  Account,
+  AccountType,
   Category,
   Direction,
   RecurringExpense,
@@ -8,7 +10,7 @@ import type {
   TransactionSource,
   UserProfile,
 } from "@pocketpilot/core";
-import type { GoalRow, ProfileRow, RecurringRow, TransactionRow } from "./database.types";
+import type { AccountRow, GoalRow, ProfileRow, RecurringRow, TransactionRow } from "./database.types";
 
 export function rowToTransaction(r: TransactionRow): Transaction {
   return {
@@ -87,6 +89,14 @@ export function goalToRow(g: SavingsGoal, userId: string): Omit<GoalRow, "create
     deadline: g.deadline ?? null,
     emoji: g.emoji ?? null,
   };
+}
+
+export function rowToAccount(r: AccountRow): Account {
+  return { id: r.id, name: r.name, type: r.type as AccountType, balance: r.balance };
+}
+
+export function accountToRow(a: Account, userId: string): Omit<AccountRow, "created_at"> {
+  return { id: a.id, user_id: userId, name: a.name, type: a.type, balance: a.balance };
 }
 
 export function rowToProfile(r: ProfileRow): UserProfile {
