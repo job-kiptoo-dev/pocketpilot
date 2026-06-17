@@ -72,11 +72,15 @@ export function LocalStoreProvider({ children }: { children: React.ReactNode }) 
     }));
   }, []);
 
+  const deleteGoal = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, goals: prev.goals.filter((g) => g.id !== id) }));
+  }, []);
+
   const reset = useCallback(() => setData(seedData(new Date())), []);
 
   const value = useMemo<StoreValue>(
-    () => ({ data, now, hydrated, live: true, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, reset }),
-    [data, now, hydrated, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, reset],
+    () => ({ data, now, hydrated, live: true, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset }),
+    [data, now, hydrated, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

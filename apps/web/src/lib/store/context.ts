@@ -15,6 +15,7 @@ export interface StoreValue {
   deleteTransaction: (id: string) => void;
   upsertGoal: (goal: SavingsGoal) => void;
   contributeToGoal: (id: string, amountCents: number) => void;
+  deleteGoal: (id: string) => void;
   reset: () => void;
 }
 

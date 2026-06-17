@@ -151,9 +151,14 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
     if (updated) repoRef.current?.upsertGoal(updated).catch(() => void reload());
   }, [reload]);
 
+  const deleteGoal = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, goals: prev.goals.filter((g) => g.id !== id) }));
+    repoRef.current?.deleteGoal(id).catch(() => void reload());
+  }, [reload]);
+
   const value = useMemo<StoreValue>(
-    () => ({ data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, reset: reload }),
-    [data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, reload],
+    () => ({ data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reset: reload }),
+    [data, now, hydrated, live, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, reload],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
