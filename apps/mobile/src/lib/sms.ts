@@ -40,6 +40,43 @@ function loadNativeListener(): { addListener: (cb: (m: { body: string; originati
 
 export const smsListenerAvailable = Platform.OS === "android" && loadNativeListener() !== null;
 
+const SAMPLE_PAYEES: { merchant: string; kes: number }[] = [
+  { merchant: "MAMA OLIECH LUNCH", kes: 180 },
+  { merchant: "EMBASSAVA SACCO", kes: 100 },
+  { merchant: "NAIVAS SUPERMARKET", kes: 1340 },
+  { merchant: "KPLC PREPAID", kes: 500 },
+  { merchant: "JAVA HOUSE", kes: 760 },
+  { merchant: "SHELL KILIMANI", kes: 2000 },
+];
+
+function randomCode(): string {
+  const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const n = "0123456789";
+  const pick = (s: string, k: number) =>
+    Array.from({ length: k }, () => s[Math.floor(Math.random() * s.length)]).join("");
+  return pick(a, 3) + pick(a + n, 7);
+}
+
+/**
+ * Build a realistic M-Pesa "paid to" SMS whose new balance is derived from the
+ * caller's current balance — used to simulate an incoming message in dev,
+ * exercising the exact same parse → ingest path as the native listener.
+ */
+export function buildSampleMpesaSms(currentBalanceCents: number): SmsMessage {
+  const payee = SAMPLE_PAYEES[Math.floor(Math.random() * SAMPLE_PAYEES.length)];
+  const amountCents = payee.kes * 100;
+  const newBalanceCents = Math.max(0, currentBalanceCents - amountCents);
+  const now = new Date();
+  const date = `${now.getDate()}/${now.getMonth() + 1}/${String(now.getFullYear()).slice(2)}`;
+  const hours = now.getHours() % 12 || 12;
+  const ampm = now.getHours() < 12 ? "AM" : "PM";
+  const time = `${hours}:${String(now.getMinutes()).padStart(2, "0")} ${ampm}`;
+  const fmt = (c: number) => (c / 100).toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const body = `${randomCode()} Confirmed. Ksh${fmt(amountCents)} paid to ${payee.merchant}. on ${date} at ${time}. New M-PESA balance is Ksh${fmt(newBalanceCents)}. Transaction cost, Ksh0.00.`;
+  return { body, sender: "MPESA" };
+}
+
 /**
  * Start listening for incoming M-Pesa SMS. Returns an unsubscribe function.
  * No-ops (returns a noop unsubscribe) when unavailable.

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Alert, ScrollView, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SPEND_CATEGORIES, toCents, type Category, type Direction } from "@pocketpilot/core";
+import { SPEND_CATEGORIES, currentBalance, toCents, type Category, type Direction } from "@pocketpilot/core";
 import { useStore } from "@/lib/store";
-import { smsListenerAvailable } from "@/lib/sms";
+import { buildSampleMpesaSms, smsListenerAvailable } from "@/lib/sms";
 import { useColors } from "@/lib/theme";
 import { Btn, Card, Field, Muted, Title } from "@/components/ui";
 
@@ -12,7 +12,7 @@ const EXAMPLE =
 
 export default function AddScreen() {
   const c = useColors();
-  const { addTransaction, addFromSms } = useStore();
+  const { addTransaction, addFromSms, data } = useStore();
 
   const [sms, setSms] = useState("");
   const [amount, setAmount] = useState("");
@@ -27,6 +27,17 @@ export default function AddScreen() {
     } else {
       Alert.alert("Couldn't read that", "Paste a full M-Pesa confirmation message.");
     }
+  }
+
+  // Simulate an incoming M-Pesa SMS through the exact path the native
+  // listener uses: parseMpesa() -> addTransaction() -> realtime update.
+  function simulateIncoming() {
+    const msg = buildSampleMpesaSms(currentBalance(data));
+    const ok = addFromSms(msg.body);
+    Alert.alert(
+      ok ? "📩 Incoming M-Pesa SMS detected" : "Parse failed",
+      ok ? `Auto-ingested:\n\n${msg.body}` : msg.body,
+    );
   }
 
   function addManual() {
@@ -49,6 +60,15 @@ export default function AddScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}>
         <Title>Add transaction</Title>
+
+        <Card style={{ gap: 10, borderStyle: "dashed" }}>
+          <Text style={{ color: c.text, fontWeight: "700", fontSize: 16 }}>📩 Test the auto-listener</Text>
+          <Muted size={12}>
+            Simulates an incoming M-Pesa SMS through the same parse → ingest → realtime path the Android
+            listener uses. Watch the Dashboard balance & status update live.
+          </Muted>
+          <Btn label="Simulate incoming SMS" onPress={simulateIncoming} />
+        </Card>
 
         <Card style={{ gap: 12 }}>
           <Text style={{ color: c.text, fontWeight: "700", fontSize: 16 }}>Paste M-Pesa SMS</Text>
