@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { StoreContext, withComputedBalance, type StoreValue } from "./context";
+import { migrateLocalData } from "./migrate";
 
 const EMPTY: AppData = {
   profile: { name: "", payday: 1, monthlyIncome: 0 },
@@ -31,6 +32,9 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
   const [hydrated, setHydrated] = useState(false);
   const [live, setLive] = useState(false);
   const repoRef = useRef<SupabaseRepository | null>(null);
+  // Transactions added before the repo is ready are queued, then flushed —
+  // so a write is never silently dropped.
+  const pendingRef = useRef<Omit<Transaction, "id">[]>([]);
 
   const reload = useCallback(async () => {
     const repo = repoRef.current;
@@ -56,9 +60,22 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
         setHydrated(true);
         return;
       }
-      repoRef.current = createSupabaseRepository(supabase, user.id);
+      const repo = createSupabaseRepository(supabase, user.id);
+      repoRef.current = repo;
+
+      // Recover any transactions created in local-seed mode on this browser.
+      const migrated = await migrateLocalData(repo);
+      // Flush writes queued before the repo was ready.
+      const queued = pendingRef.current.splice(0);
+      for (const tx of queued) {
+        await repo.addTransaction(tx).catch(() => {});
+      }
+
       await reload();
       setHydrated(true);
+      if (migrated > 0) {
+        toast.success(`Synced ${migrated} local transaction${migrated > 1 ? "s" : ""} to your account`);
+      }
 
       unsubscribe = subscribeToUserData(
         supabase,
@@ -85,9 +102,14 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
       created = withComputedBalance(prev, tx);
       return { ...prev, transactions: [created, ...prev.transactions] };
     });
-    repoRef.current
-      ?.addTransaction(tx)
-      .catch((err) => toast.error("Couldn't save transaction", { description: err instanceof Error ? err.message : undefined }));
+    if (repoRef.current) {
+      repoRef.current
+        .addTransaction(tx)
+        .catch((err) => toast.error("Couldn't save transaction", { description: err instanceof Error ? err.message : undefined }));
+    } else {
+      // Repo not ready yet — queue so the write isn't lost; flushed on connect.
+      pendingRef.current.push(tx);
+    }
     return created;
   }, []);
 
