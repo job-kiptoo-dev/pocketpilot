@@ -24,7 +24,8 @@ async function main() {
     category: "Food",
     merchant: marker,
     date: new Date().toISOString(),
-    source: "manual",
+    source: "sms",
+    code: "TEST" + Date.now(), // exercises the previously-failing coded path
   });
   console.log("inserted:", marker);
   await a.c.auth.signOut();

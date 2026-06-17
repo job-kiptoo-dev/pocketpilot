@@ -66,26 +66,20 @@ export class SupabaseRepository implements Repository {
   async addTransaction(tx: Omit<Transaction, "id">): Promise<Transaction> {
     const insert = transactionToInsert(tx, this.userId);
 
-    // SMS messages carry a unique M-Pesa code -> ignore duplicate ingests.
-    if (insert.code) {
-      const { data, error } = await this.client
-        .from("transactions")
-        .upsert(insert, { onConflict: "user_id,code", ignoreDuplicates: true })
-        .select()
-        .maybeSingle();
-      if (error) throw error;
-      if (data) return rowToTransaction(data);
-      // Duplicate was ignored; return the existing row.
-      const existing = await this.client
-        .from("transactions")
-        .select("*")
-        .eq("code", insert.code)
-        .maybeSingle();
-      if (existing.data) return rowToTransaction(existing.data);
-    }
-
     const { data, error } = await this.client.from("transactions").insert(insert).select().single();
-    if (error) throw error;
+    if (error) {
+      // 23505 = duplicate SMS (same user_id + M-Pesa code). Treat as success and
+      // return the existing row. (Manual rows have no code, so never collide.)
+      if (error.code === "23505" && insert.code) {
+        const existing = await this.client
+          .from("transactions")
+          .select("*")
+          .eq("code", insert.code)
+          .maybeSingle();
+        if (existing.data) return rowToTransaction(existing.data);
+      }
+      throw error;
+    }
     return rowToTransaction(data);
   }
 
