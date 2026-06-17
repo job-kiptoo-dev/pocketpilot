@@ -11,7 +11,15 @@ export function UserMenu() {
   const router = useRouter();
   const { live } = useStore();
 
-  if (!isSupabaseConfigured()) return null;
+  // Local/offline mode: data lives only in this browser — make that explicit.
+  if (!isSupabaseConfigured()) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--warning)]/15 px-2.5 py-1 text-xs font-medium text-[color:var(--warning)]">
+        <span className="size-2 rounded-full bg-[color:var(--warning)]" />
+        Local only — not synced
+      </span>
+    );
+  }
 
   async function signOut() {
     await getBrowserSupabase().auth.signOut();

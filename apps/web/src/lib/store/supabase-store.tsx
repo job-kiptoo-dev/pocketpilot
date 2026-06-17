@@ -58,7 +58,12 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
       } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) {
+        // Configured for cloud but not authenticated — don't accept writes into
+        // the void; send the user to sign in so their data actually persists.
         setHydrated(true);
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.replace("/login");
+        }
         return;
       }
       const repo = createSupabaseRepository(supabase, user.id);
@@ -110,6 +115,7 @@ export function SupabaseStoreProvider({ children }: { children: React.ReactNode 
     } else {
       // Repo not ready yet — queue so the write isn't lost; flushed on connect.
       pendingRef.current.push(tx);
+      toast.warning("Saving once connected…", { description: "You're not fully signed in yet." });
     }
     return created;
   }, []);
