@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import type { AppData, Transaction } from "@pocketpilot/core";
+import type { AppData, SavingsGoal, Transaction } from "@pocketpilot/core";
 import { currentBalance, genId, parseMpesa } from "@pocketpilot/core";
 import { createSupabaseRepository, subscribeToUserData, type SupabaseRepository } from "@pocketpilot/supabase";
 import { getSupabase, supabaseConfigured } from "./supabase";
@@ -23,6 +23,9 @@ interface StoreValue {
   addTransaction: (tx: Omit<Transaction, "id">) => void;
   addFromSms: (raw: string) => boolean;
   deleteTransaction: (id: string) => void;
+  upsertGoal: (goal: SavingsGoal) => void;
+  contributeToGoal: (id: string, amountCents: number) => void;
+  deleteGoal: (id: string) => void;
   signOut: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -136,6 +139,44 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [reload],
   );
 
+  const upsertGoal = useCallback(
+    (goal: SavingsGoal) => {
+      setData((prev) => {
+        const i = prev.goals.findIndex((g) => g.id === goal.id);
+        const goals = [...prev.goals];
+        if (i >= 0) goals[i] = goal;
+        else goals.push(goal);
+        return { ...prev, goals };
+      });
+      repoRef.current?.upsertGoal(goal).catch(() => void reload());
+    },
+    [reload],
+  );
+
+  const contributeToGoal = useCallback(
+    (id: string, amountCents: number) => {
+      let updated: SavingsGoal | undefined;
+      setData((prev) => {
+        const goals = prev.goals.map((g) => {
+          if (g.id !== id) return g;
+          updated = { ...g, saved: g.saved + amountCents };
+          return updated;
+        });
+        return { ...prev, goals };
+      });
+      if (updated) repoRef.current?.upsertGoal(updated).catch(() => void reload());
+    },
+    [reload],
+  );
+
+  const deleteGoal = useCallback(
+    (id: string) => {
+      setData((prev) => ({ ...prev, goals: prev.goals.filter((g) => g.id !== id) }));
+      repoRef.current?.deleteGoal(id).catch(() => void reload());
+    },
+    [reload],
+  );
+
   const signOut = useCallback(async () => {
     await supabase?.auth.signOut();
     setData(EMPTY);
@@ -152,10 +193,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addTransaction,
       addFromSms,
       deleteTransaction,
+      upsertGoal,
+      contributeToGoal,
+      deleteGoal,
       signOut,
       reload,
     }),
-    [session, loading, live, data, now, addTransaction, addFromSms, deleteTransaction, signOut, reload],
+    [session, loading, live, data, now, addTransaction, addFromSms, deleteTransaction, upsertGoal, contributeToGoal, deleteGoal, signOut, reload],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
