@@ -24,7 +24,8 @@ export async function migrateLocalData(repo: SupabaseRepository): Promise<number
 
     let migrated = 0;
     for (const t of userTxns) {
-      const { id: _id, ...rest } = t;
+      const { id, ...rest } = t;
+      void id;
       try {
         await repo.addTransaction(rest);
         migrated++;
