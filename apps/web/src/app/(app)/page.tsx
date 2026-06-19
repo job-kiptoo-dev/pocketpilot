@@ -45,6 +45,23 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {data.transactions.length === 0 ? (
+        <Card className="flex flex-col items-center gap-4 px-6 py-14 text-center">
+          <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-2xl">📲</span>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Let&apos;s see your money clearly</h2>
+            <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+              Paste an M-Pesa SMS or add a transaction, and PocketPilot starts tracking your
+              balance, forecasting payday, and spotting ways to save.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <PasteSmsDialog />
+            <AddTxDialog />
+          </div>
+        </Card>
+      ) : (
+      <>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <BalanceCard />
@@ -88,6 +105,8 @@ export default function DashboardPage() {
         <CategoriesPie />
         <SavingsCard />
       </div>
+      </>
+      )}
     </div>
   );
 }

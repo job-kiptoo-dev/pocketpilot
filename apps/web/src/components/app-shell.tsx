@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, LayoutDashboard, Receipt, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
+import { Landmark, LayoutDashboard, Loader2, Receipt, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
+import { SyncStatus } from "@/components/sync-status";
+import { useStore } from "@/lib/store/store";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -22,6 +24,7 @@ function isActive(href: string, pathname: string) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { hydrated } = useStore();
 
   return (
     <div className="flex min-h-dvh w-full">
@@ -61,13 +64,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Brand compact />
           </div>
           <div className="hidden md:block" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <SyncStatus />
             <UserMenu />
             <ThemeToggle />
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-10">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-10">
+          {hydrated ? (
+            children
+          ) : (
+            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-muted-foreground">
+              <Loader2 className="size-7 animate-spin text-primary" />
+              <p className="text-sm">Loading your money…</p>
+            </div>
+          )}
+        </main>
       </div>
 
       {/* Mobile bottom nav */}
