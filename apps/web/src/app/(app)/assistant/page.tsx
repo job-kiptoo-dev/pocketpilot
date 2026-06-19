@@ -6,7 +6,6 @@ import { ArrowUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store/store";
-import { answerLocally } from "@pocketpilot/core";
 import { cn } from "@/lib/utils";
 
 interface Msg {
@@ -23,23 +22,66 @@ const SUGGESTIONS = [
 ];
 
 export default function AssistantPage() {
-  const { data, now } = useStore();
+  const { data } = useStore();
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
-      text: `Hi ${data.profile.name}! I'm your PocketPilot assistant. Ask me anything about your money — I read your real transactions.`,
+      text: `Hi ${data.profile.name || "there"}! I'm your PocketPilot assistant. Ask me anything about your money — I read your real transactions.`,
     },
   ]);
   const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  function ask(question: string) {
-    const q = question.trim();
-    if (!q) return;
-    const answer = answerLocally(data, q, now);
-    setMessages((m) => [...m, { role: "user", text: q }, { role: "assistant", text: answer }]);
-    setInput("");
+  function scrollDown() {
     requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth" }));
+  }
+
+  async function ask(question: string) {
+    const q = question.trim();
+    if (!q || busy) return;
+    setInput("");
+    setBusy(true);
+
+    // History for the model (exclude the canned greeting), then the new question.
+    const history = messages.slice(1).map((m) => ({ role: m.role, content: m.text }));
+    const outgoing = [...history, { role: "user" as const, content: q }];
+
+    setMessages((m) => [...m, { role: "user", text: q }, { role: "assistant", text: "" }]);
+    scrollDown();
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: outgoing, data }),
+      });
+      if (!res.ok || !res.body) throw new Error("request failed");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        setMessages((m) => {
+          const next = [...m];
+          next[next.length - 1] = { role: "assistant", text: acc };
+          return next;
+        });
+        scrollDown();
+      }
+    } catch {
+      setMessages((m) => {
+        const next = [...m];
+        next[next.length - 1] = { role: "assistant", text: "Sorry — I couldn't reach the assistant just now. Please try again." };
+        return next;
+      });
+    } finally {
+      setBusy(false);
+      scrollDown();
+    }
   }
 
   return (
@@ -68,7 +110,7 @@ export default function AssistantPage() {
                     : "rounded-bl-md bg-muted text-foreground",
                 )}
               >
-                {m.text}
+                {m.text || <span className="opacity-60">…</span>}
               </div>
             </motion.div>
           ))}
@@ -101,9 +143,10 @@ export default function AssistantPage() {
           placeholder="Ask about your money..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          disabled={busy}
           className="flex-1"
         />
-        <Button type="submit" size="icon" className="shrink-0 rounded-full" aria-label="Send">
+        <Button type="submit" size="icon" disabled={busy} className="shrink-0 rounded-full" aria-label="Send">
           <ArrowUp className="size-4" />
         </Button>
       </form>
