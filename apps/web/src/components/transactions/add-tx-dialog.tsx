@@ -38,7 +38,7 @@ export function AddTxDialog({ trigger }: { trigger?: ReactElement }) {
 
   function submit() {
     const value = Number(amount);
-    if (!value || value <= 0) {
+    if (!Number.isFinite(value) || value <= 0) {
       toast.error("Enter a valid amount");
       return;
     }
@@ -73,7 +73,13 @@ export function AddTxDialog({ trigger }: { trigger?: ReactElement }) {
           <DialogDescription>Record money in or out manually.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
           <Tabs value={direction} onValueChange={(v) => setDirection(v as Direction)}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="out">Money out</TabsTrigger>
@@ -120,11 +126,11 @@ export function AddTxDialog({ trigger }: { trigger?: ReactElement }) {
               </Select>
             </div>
           )}
-        </div>
 
-        <DialogFooter>
-          <Button onClick={submit}>Save transaction</Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="submit">Save transaction</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -12,7 +12,12 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 const EMPTY: AppData = { profile: { name: "", payday: 1, monthlyIncome: 0 }, transactions: [], recurring: [], goals: [], accounts: [] };
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as { messages?: ChatMessage[]; data?: AppData };
+  let body: { messages?: ChatMessage[]; data?: AppData };
+  try {
+    body = (await req.json()) as { messages?: ChatMessage[]; data?: AppData };
+  } catch {
+    return new Response("Invalid request body.", { status: 400 });
+  }
   const messages = (body.messages ?? []).filter((m) => m && typeof m.content === "string");
   const data = body.data ?? EMPTY;
   const now = new Date();
