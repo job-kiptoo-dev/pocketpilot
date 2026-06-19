@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { CalendarClock, Gauge, Lightbulb, ShieldCheck, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SafetyMeter } from "@/components/widgets/safety-meter";
+import { BufferCard } from "@/components/widgets/buffer-card";
 import { Simulator } from "@/components/widgets/simulator";
 import { AnimatedInt, AnimatedKes } from "@/components/animated-number";
 import { useSurvival } from "@/lib/store/selectors";
@@ -89,6 +90,8 @@ export default function SurvivalPage() {
           </p>
         </CardContent>
       </Card>
+
+      <BufferCard />
 
       <Simulator />
     </div>

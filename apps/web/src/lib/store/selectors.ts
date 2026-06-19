@@ -5,6 +5,8 @@ import { useStore } from "./store";
 import { computeHealth } from "@pocketpilot/core";
 import { computeForecast } from "@pocketpilot/core";
 import { computeSurvival } from "@pocketpilot/core";
+import { computeBuffer } from "@pocketpilot/core";
+import { findOpportunities } from "@pocketpilot/core";
 import { computeAllGoals } from "@pocketpilot/core";
 import { simulatePurchase } from "@pocketpilot/core";
 
@@ -21,6 +23,16 @@ export function useForecast() {
 export function useSurvival() {
   const { data, now } = useStore();
   return useMemo(() => computeSurvival(data, now), [data, now]);
+}
+
+export function useBuffer() {
+  const { data, now } = useStore();
+  return useMemo(() => computeBuffer(data, now), [data, now]);
+}
+
+export function useOpportunities() {
+  const { data, now } = useStore();
+  return useMemo(() => findOpportunities(data, now), [data, now]);
 }
 
 export function useGoals() {

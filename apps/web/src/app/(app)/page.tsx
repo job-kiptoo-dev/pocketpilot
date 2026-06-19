@@ -11,6 +11,8 @@ import { HealthScore } from "@/components/widgets/health-score";
 import { CategoriesPie } from "@/components/widgets/categories-pie";
 import { SpendingTrend } from "@/components/widgets/spending-trend";
 import { SavingsCard } from "@/components/widgets/savings-card";
+import { BufferCard } from "@/components/widgets/buffer-card";
+import { OpportunitiesCard } from "@/components/widgets/opportunities-card";
 import { StatsStrip } from "@/components/widgets/stats-strip";
 import { SafetyMeter } from "@/components/widgets/safety-meter";
 import { Card } from "@/components/ui/card";
@@ -75,6 +77,11 @@ export default function DashboardPage() {
           <SpendingTrend />
         </div>
         <ForecastCard />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <BufferCard />
+        <OpportunitiesCard />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

@@ -13,6 +13,8 @@ export * from "./finance/util";
 export * from "./finance/health";
 export * from "./finance/forecast";
 export * from "./finance/survival";
+export * from "./finance/buffer";
+export * from "./finance/opportunities";
 export * from "./finance/savings";
 export * from "./finance/simulator";
 export * from "./finance/accounts";
