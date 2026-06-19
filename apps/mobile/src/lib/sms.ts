@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { isMpesaSms as coreIsMpesaSms } from "@pocketpilot/core";
 
 /**
  * M-Pesa SMS auto-ingestion.
@@ -20,12 +21,9 @@ export interface SmsMessage {
 
 type Listener = (msg: SmsMessage) => void;
 
-// Only Safaricom M-PESA confirmations should be ingested.
-const MPESA_SENDER = /MPESA|M-PESA|SAFARICOM/i;
-const MPESA_BODY = /M-?PESA|Confirmed\.\s*Ksh/i;
-
+// Shared with the web ingest webhook so both paths filter identically.
 export function isMpesaSms(msg: SmsMessage): boolean {
-  return MPESA_SENDER.test(msg.sender ?? "") || MPESA_BODY.test(msg.body);
+  return coreIsMpesaSms(msg);
 }
 
 /** Try to load the native SMS listener (present only in a custom dev build). */

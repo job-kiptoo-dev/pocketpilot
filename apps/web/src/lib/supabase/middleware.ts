@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@pocketpilot/supabase";
 import { requireSupabaseEnv } from "./config";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// The SMS ingest webhook authenticates by token (no session) — must stay open.
+// (/api/ingest/token is NOT listed: it derives the user from the session.)
+const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest/sms"];
 
 /** Refreshes the Supabase session and guards authenticated routes. */
 export async function updateSession(request: NextRequest): Promise<NextResponse> {

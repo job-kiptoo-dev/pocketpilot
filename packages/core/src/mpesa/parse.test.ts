@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { parseMpesa, parseMpesaBatch } from "./parse";
+import { isMpesaSms, parseMpesa, parseMpesaBatch } from "./parse";
 import { toCents } from "../money";
+
+describe("isMpesaSms", () => {
+  it("accepts by sender", () => {
+    expect(isMpesaSms({ body: "anything", sender: "MPESA" })).toBe(true);
+    expect(isMpesaSms({ body: "x", sender: "Safaricom" })).toBe(true);
+  });
+  it("accepts by body when sender is unknown", () => {
+    expect(isMpesaSms({ body: "Confirmed. Ksh135.00 paid to NAIVAS." })).toBe(true);
+    expect(isMpesaSms({ body: "New M-PESA balance is Ksh10.00" })).toBe(true);
+  });
+  it("rejects unrelated messages", () => {
+    expect(isMpesaSms({ body: "Your OTP is 123456", sender: "EQUITY" })).toBe(false);
+  });
+});
 
 describe("parseMpesa", () => {
   it("parses a buy-goods 'paid to' message", () => {

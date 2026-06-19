@@ -60,6 +60,13 @@ export type GoalRow = {
   created_at: string;
 }
 
+export type IngestTokenRow = {
+  user_id: string;
+  token_hash: string;
+  created_at: string;
+  last_used_at: string | null;
+};
+
 type Table<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
@@ -90,6 +97,11 @@ export interface Database {
         AccountRow,
         Omit<AccountRow, "id" | "created_at"> & { id?: string },
         Partial<AccountRow>
+      >;
+      ingest_tokens: Table<
+        IngestTokenRow,
+        Omit<IngestTokenRow, "created_at" | "last_used_at"> & { last_used_at?: string | null },
+        Partial<IngestTokenRow>
       >;
     };
     // Empty mapped types (no string index signature) — a `Record<string, never>`

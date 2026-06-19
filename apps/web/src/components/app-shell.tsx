@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, LayoutDashboard, Loader2, Receipt, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
+import { Landmark, LayoutDashboard, Loader2, Receipt, ShieldCheck, Sparkles, Target, Wallet, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
@@ -16,6 +16,7 @@ const NAV = [
   { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/survival", label: "Survival", icon: ShieldCheck },
   { href: "/assistant", label: "Assistant", icon: Sparkles },
+  { href: "/settings", label: "Connect", icon: Zap },
 ] as const;
 
 function isActive(href: string, pathname: string) {

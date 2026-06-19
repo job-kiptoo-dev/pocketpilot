@@ -161,6 +161,16 @@ export function parseMpesa(raw: string): ParsedTransaction | null {
   return null;
 }
 
+// Only genuine Safaricom M-PESA confirmations should be ingested — used by the
+// web ingest webhook and the (parked) native Android SMS listener alike.
+const MPESA_SENDER = /MPESA|M-PESA|SAFARICOM/i;
+const MPESA_BODY = /M-?PESA|Confirmed\.\s*Ksh/i;
+
+/** True if an SMS looks like an M-Pesa confirmation, by sender and/or body. */
+export function isMpesaSms(msg: { body: string; sender?: string }): boolean {
+  return MPESA_SENDER.test(msg.sender ?? "") || MPESA_BODY.test(msg.body);
+}
+
 /** Parse multiple messages (one per line / blank-line separated). */
 export function parseMpesaBatch(input: string): ParsedTransaction[] {
   return input
