@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 
@@ -123,31 +124,68 @@ export default function SettingsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Smartphone className="size-4" /> Set up SMS forwarding (Android)
+                <Smartphone className="size-4" /> Forward your M-Pesa SMS
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>
                 M-Pesa has no real-time API for personal numbers, so we read the confirmation SMS on your
-                phone. Use a free SMS-forwarding app to POST those messages to your webhook:
+                phone and POST it to your webhook above. Pick your phone:
               </p>
-              <ol className="ml-1 list-inside list-decimal space-y-1.5">
-                <li>
-                  Install an SMS-to-URL forwarder (e.g. <strong className="text-foreground">SMS Forwarder</strong>{" "}
-                  on the Play Store, or the open-source <strong className="text-foreground">SMS Forwarder</strong> on F-Droid).
-                </li>
-                <li>
-                  Add a rule that matches the sender <code className="rounded bg-muted px-1">MPESA</code>.
-                </li>
-                <li>
-                  Set the action to a <strong className="text-foreground">webhook / HTTP POST</strong> to the URL above,
-                  sending the message text as the body (field <code className="rounded bg-muted px-1">text</code> or raw body both work).
-                </li>
-                <li>Send yourself a small M-Pesa payment — it should appear here within a second.</li>
-              </ol>
+
+              <Tabs defaultValue="ios">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="ios">iPhone</TabsTrigger>
+                  <TabsTrigger value="android">Android</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="ios" className="pt-3">
+                  <p className="mb-2">Use a built-in Shortcuts automation — no extra app, runs automatically:</p>
+                  <ol className="ml-1 list-inside list-decimal space-y-1.5">
+                    <li>
+                      Shortcuts app → <strong className="text-foreground">Automation</strong> tab → New →{" "}
+                      <strong className="text-foreground">Message</strong>.
+                    </li>
+                    <li>
+                      Filter: <strong className="text-foreground">Sender contains</strong>{" "}
+                      <code className="rounded bg-muted px-1">MPESA</code>. Turn on{" "}
+                      <strong className="text-foreground">Run Immediately</strong>.
+                    </li>
+                    <li>
+                      Add action <strong className="text-foreground">Get Contents of URL</strong> → method{" "}
+                      <strong className="text-foreground">POST</strong>, URL = the webhook above.
+                    </li>
+                    <li>
+                      Request Body = <strong className="text-foreground">JSON</strong>, add field{" "}
+                      <code className="rounded bg-muted px-1">text</code> = the{" "}
+                      <strong className="text-foreground">Shortcut Input</strong> (message content).
+                    </li>
+                    <li>Send yourself a small M-Pesa payment — it should appear here within a second.</li>
+                  </ol>
+                </TabsContent>
+
+                <TabsContent value="android" className="pt-3">
+                  <ol className="ml-1 list-inside list-decimal space-y-1.5">
+                    <li>
+                      Install an SMS-to-URL forwarder (e.g. <strong className="text-foreground">SMS Forwarder</strong>{" "}
+                      on the Play Store, or the open-source one on F-Droid).
+                    </li>
+                    <li>
+                      Add a rule matching the sender <code className="rounded bg-muted px-1">MPESA</code>.
+                    </li>
+                    <li>
+                      Action = <strong className="text-foreground">webhook / HTTP POST</strong> to the URL above,
+                      sending the message text as the body (field{" "}
+                      <code className="rounded bg-muted px-1">text</code> or raw body both work).
+                    </li>
+                    <li>Send yourself a small M-Pesa payment — it should appear here within a second.</li>
+                  </ol>
+                </TabsContent>
+              </Tabs>
+
               <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs">
-                Your SMS pass through the forwarder app and your own HTTPS endpoint. Keep the token private —
-                treat the URL like a password, and regenerate it if it leaks.
+                Your SMS pass through your own HTTPS endpoint. Keep the token private — treat the URL like a
+                password, and regenerate it if it leaks.
               </p>
             </CardContent>
           </Card>
